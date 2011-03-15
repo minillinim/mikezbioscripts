@@ -1,0 +1,4 @@
+Scripts are split across three folders:
+fastXMike contains filtering and fasta manipulation type scripts
+map_plot_pipe contains scripts which can be used to map reads onto sequences and then view them
+meta_barcode contains scripts for barcoding and viewing metagenomic contigs.
