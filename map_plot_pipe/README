@@ -1,0 +1,12 @@
+These scripts work together to allow you to plot paired reads to a reference.
+
+Workflow:
+
+1. makeSam.py
+2. plotPipe.py
+
+Dependencies:
+
+1. R
+2. Rpy2
+3. bwa
