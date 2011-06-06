@@ -9,4 +9,5 @@ Dependencies:
 
 1. R
 2. Rpy2
-3. bwa
+3. pysam
+4. bwa
