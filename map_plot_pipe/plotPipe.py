@@ -50,7 +50,9 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
 
-    print "Command line parameters look good. Parsing SAM"
+    print "Command line parameters look good"
+
+    print "Parsing SAM"
 
     # work out how many to parse
     if (opts.samFileStop is None):
@@ -64,7 +66,9 @@ if __name__ == '__main__':
     else:
         parse_cmd = "sam2PairPlotCSV.py -c -b -s " + opts.samFileName + ' ' + stops
 
-    os.system(parse_cmd)
+    if (os.system(parse_cmd) != 0):
+        print "Failed running command: "+parse_cmd
+        sys.exit(1)
 
     print "Parsing contig file"
 
@@ -100,7 +104,7 @@ if __name__ == '__main__':
 
     num_contigs =  len (samFile.header['SQ'])
 
-    # store all the mappings for each contig in it's own list
+    # store all the mappings for each contig in its own list
     CSVFileName = "map_out"
     for i in range(0, num_contigs):
         con_id = samFile.header['SQ'][i]['SN']

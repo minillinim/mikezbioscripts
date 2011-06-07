@@ -1,13 +1,16 @@
-These scripts work together to allow you to plot paired reads to a reference.
+These scripts work together to allow you to plot single or paired reads to
+reference contigs.
 
 Workflow:
-
 1. makeSam.py
 2. plotPipe.py
 
 Dependencies:
-
 1. R
 2. Rpy2
 3. pysam
 4. bwa
+
+Note:
+Limit the number of reference contigs to a reasonable number or you will run
+into errors such as "too many files open"
