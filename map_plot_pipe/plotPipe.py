@@ -30,7 +30,7 @@ import pysam
 if __name__ == '__main__':
 
     # intialise the options parser
-    parser = OptionParser("\n\n %prog -s samfile [-k]")
+    parser = OptionParser("\n\n %prog -s samfile -c contigfile [options]")
     parser.add_option("-s", "--sam_fileName", type="string", dest="samFileName", help="Specify a sam file to parse")
     parser.add_option("-N", "--number_SAM", type="int", dest="samFileStop", help="Specify how many SAM / BAM records to parse")
     parser.add_option("-b", "--binary", action="store_true", dest="useBinary", help="Set this if you use a BAM file [default: false]")
@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     print "Command line parameters look good. Parsing SAM"
 
-    # work out howm many to parse
+    # work out how many to parse
     if (opts.samFileStop is None):
         stops = '';
     else:
