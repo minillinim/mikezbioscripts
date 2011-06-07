@@ -45,7 +45,7 @@ def samse(database, sai_1, readfile_1, outfile):
 if __name__ == '__main__':
 
     # intialise the options parser
-    parser = OptionParser("\n\n %prog -c csvFileName")
+    parser = OptionParser("\n\n %prog [options]")
     parser.add_option("-1", "--reads_1", type="string", dest="readfile_1", help="The first data of a paired read file")
     parser.add_option("-2", "--reads_2", type="string", dest="readfile_2", help="The second data of a paired read file")
     parser.add_option("-d", "--database", type="string", dest="database", help="The scaffold, query, database...")
