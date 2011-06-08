@@ -108,14 +108,14 @@ def parseSamBam(samPath, useBinary, makeCoverage, stopAt, CSVFileName):
         try:
             samFile = pysam.Samfile(samPath, 'rb')
         except:
-            print "Unable to open BAM file -- did you supply a SAM file?"
-            return None
+            print "Unable to open BAM file -- did you supply a SAM file instead?"
+            sys.exit(1)
     else:
         try:
             samFile = pysam.Samfile(samPath, 'r')
         except:
-            print "Unable to open SAM file -- did you supply a BAM file?"
-            return None
+            print "Unable to open SAM file -- did you supply a BAM file instead?"
+            sys.exit(1)
 
     num_contigs =  len (samFile.header['SQ'])
     total_size = reduce(lambda x,y:x+y, samFile.lengths)
@@ -143,6 +143,7 @@ def parseSamBam(samPath, useBinary, makeCoverage, stopAt, CSVFileName):
     for i in range(0, num_contigs):
         csv_file = open(samFile.header['SQ'][i]['SN'].replace(' ','_') + '_' + CSVFileName + '.csv', 'wb')
         csv_file.write('"position","insertsize","direction"\n')
+        # Do not close the filehandle now because they are still needed. This might cause a "Too many files open" error though...
         csv_files[samFile.header['SQ'][i]['SN']] = [csv_file]
 
     # start parsing

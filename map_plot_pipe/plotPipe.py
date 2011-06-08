@@ -30,7 +30,7 @@ import pysam
 if __name__ == '__main__':
 
     # intialise the options parser
-    parser = OptionParser("\n\n %prog -s samfile [-k]")
+    parser = OptionParser("\n\n %prog -s samfile -c contigfile [options]")
     parser.add_option("-s", "--sam_fileName", type="string", dest="samFileName", help="Specify a sam file to parse")
     parser.add_option("-N", "--number_SAM", type="int", dest="samFileStop", help="Specify how many SAM / BAM records to parse")
     parser.add_option("-b", "--binary", action="store_true", dest="useBinary", help="Set this if you use a BAM file [default: false]")
@@ -50,9 +50,11 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(1)
 
-    print "Command line parameters look good. Parsing SAM"
+    print "Command line parameters look good"
 
-    # work out howm many to parse
+    print "Parsing SAM"
+
+    # work out how many to parse
     if (opts.samFileStop is None):
         stops = '';
     else:
@@ -64,7 +66,9 @@ if __name__ == '__main__':
     else:
         parse_cmd = "sam2PairPlotCSV.py -c -b -s " + opts.samFileName + ' ' + stops
 
-    os.system(parse_cmd)
+    if (os.system(parse_cmd) != 0):
+        print "Failed running command: "+parse_cmd
+        sys.exit(1)
 
     print "Parsing contig file"
 
@@ -100,7 +104,7 @@ if __name__ == '__main__':
 
     num_contigs =  len (samFile.header['SQ'])
 
-    # store all the mappings for each contig in it's own list
+    # store all the mappings for each contig in its own list
     CSVFileName = "map_out"
     for i in range(0, num_contigs):
         con_id = samFile.header['SQ'][i]['SN']
