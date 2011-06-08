@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import subprocess
 import os
 from optparse import OptionParser
@@ -35,9 +35,9 @@ from operator import itemgetter
 # IMAGE Stuff
 #
 def openRImageDevice(label, r):
-    r("png(filename='"+label+"', width=1000, height=700);")
+    r("png(filename='"+label+".png', width=1000, height=700);")
     r('library(gplots);')
-    
+
 
 def closeRImageDevice(r):
     r("dev.off();")
@@ -47,8 +47,8 @@ def loadData(fileName, r):
     r('windows <- read.table("'+fileName+'", header=TRUE, sep=",");')
     r('mymatrix <- as.matrix(windows[,2:dim(windows)[2]]);')
     r('data_columns <- dim(mymatrix)[2];')
-    
-def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, r):
+
+def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, plainJane, r):
     # print out the purdy picture
     
     # get the right breaks
@@ -80,28 +80,34 @@ def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, r):
         cur_col+=col_step
         bob = r['fred']
         col_string=col_string+',"'+str(bob[0])+'"'
-    
+
+    if (plainJane is False):    
     # fix the side bar colours
-    avail_cols = ['"#BBBBBB"','"#333333"']
-    side_cols_string = 'rep('+avail_cols[1]+', numClusters[1])' 
-    
-    for i in range(2, int(num_clusts)+1):
-        side_cols_string = side_cols_string+',rep('+avail_cols[i%2]+', numClusters['+str(i)+'])'
-    
+        avail_cols = ['"#BBBBBB"','"#333333"']
+    	side_cols_string = 'rep('+avail_cols[1]+', numClusters[1])'
+        for i in range(2, int(num_clusts)+1):
+            side_cols_string = side_cols_string+',rep('+avail_cols[i%2]+', numClusters['+str(i)+'])'
+        
     # load colors into R
     r('colors <- c('+col_string+');')
     r('breaks <- c('+break_string+')')
-    r('rsc <- c('+side_cols_string+')')
-    
-    # draw the heatmap
-    r('heatmap.2(sorted_comb[,(-1*max_col)], scale="none", col=colors, breaks=breaks, trace="none", dendrogram="none", Rowv=FALSE, Colv=FALSE, labCol=FALSE, labRow=FALSE, rowsep=c(705,2384), revC=FALSE, RowSideColors=rsc);')
+    if (plainJane is False):    
+        r('rsc <- c('+side_cols_string+')')
 
+    # draw the heatmap
+    if(plainJane is True):
+		# don't use the sorted matrix
+        r('heatmap.2(mymatrix, scale="none", col=colors, breaks=breaks, trace="none", dendrogram="none", Rowv=FALSE, Colv=FALSE, labCol=FALSE, labRow=FALSE, rowsep=c(705,2384), revC=FALSE);')
+        return
+    else:
+        r('heatmap.2(sorted_comb[,(-1*max_col)], scale="none", col=colors, breaks=breaks, trace="none", dendrogram="none", Rowv=FALSE, Colv=FALSE, labCol=FALSE, labRow=FALSE, rowsep=c(705,2384), revC=FALSE, RowSideColors=rsc);')
+    
     if(isAverages is False):
         # make a report formulti contig windows
         r('counts <- c()')
         r('labels <- c()')
         r('cumu_string <- c()')
-
+        
         #Get all the unique rownames (minus cut number on the end)
         r('rns <- rownames(combined);')
         bob=r['rns']
@@ -111,9 +117,6 @@ def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, r):
         r('contig_names <- unique(rownames(combined))')
         r('data_rows <- length(contig_names);')
         r('contig_exp <- rownames(combined)')
-        fred = r['contig_names']
-        billy = r['contig_exp']
-        
         l_zzz = ['nothing']
         l_123 = []
         for i in range(1,int(num_clusts)+1):
@@ -123,12 +126,12 @@ def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, r):
         c_123 = robjects.IntVector(l_123)
         r('contig_calls <- '+c_zzz.r_repr())
         r('for(i in 1:length(contig_names)) \
-        { \
-            nameI <- contig_names[i]; \
-            myRow <- table(c(combined[which(contig_exp == nameI),max_col],'+c_123.r_repr()+')); \
-            fc <- formatC(c(nameI, myRow), format="d"); \
-            cumu_string <- cbind(cumu_string, fc); \
-        }')
+          { \
+          nameI <- contig_names[i]; \
+          myRow <- table(c(combined[which(contig_exp == nameI),max_col],'+c_123.r_repr()+')); \
+          fc <- formatC(c(nameI, myRow), format="d"); \
+          cumu_string <- cbind(cumu_string, fc); \
+          }')
         out_p = r['cumu_string']
         num_rows = r['data_rows']
         
@@ -167,8 +170,8 @@ def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, r):
             report_file.write(bobby_sorted[i][0]+"\n")
         
         report_file.close()
-            
-        
+
+
 #
 # Cluster Testing
 #
@@ -177,7 +180,7 @@ def clustRTest(cent_range, r):
     
     r('library(clValid);')
     r('intern <- clValid(mymatrix, '+cent_range+', clMethods = c("hierarchical", "kmeans"), validation = "internal");')
-
+    
     # test 1
     r('pdf("internal_validation_clusters.pdf");')
     r('op <- par(no.readonly = TRUE);')
@@ -187,7 +190,7 @@ def clustRTest(cent_range, r):
     r('legend("center", clusterMethods(intern), col = 1:9, lty = 1:9,pch = paste(1:9));')
     r('par(op);')
     r('dev.off();')
-
+    
     # test 2
     r('pdf("stability_validation_clusters.pdf");')
     r('stab <- clValid(mymatrix, '+cent_range+', clMethods = c("hierarchical", "kmeans"), validation = "stability");')
@@ -206,7 +209,7 @@ def clustRTest(cent_range, r):
     r('plot(mytree);')
     r('par(op);')
     r('dev.off();')
-    
+
 
 #
 # Clustering K means
@@ -239,23 +242,23 @@ def makeCommaBreak(maxb, sepb):
         break_string = break_string+','+ str(current_break)
         current_break += sepb
     return break_string
-    
+
 
 def printAtStart():
-    print "---------------------------------------------------------------- "
+    print "----------------------------------------------------------------------------------- "
     print "barcodePlotter.py"
     print "Copyright (C) 2009, 2010 Lauren bragg, Michael Imelfort\n"
         
     print "This program comes with ABSOLUTELY NO WARRANTY;"
     print "This is free software, and you are welcome to redistribute it"
     print "under certain conditions: See the source for more details."
-    print "---------------------------------------------------------------- "
+    print "----------------------------------------------------------------------------------- "
 
 #
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
-
+    
     # intialise the options parser
     parser = OptionParser("\n\n %prog -b barcodes -c { num_clusters | cluster_range_start:cluster_range_end } -l image label [-H] [-a] [-S]")
     parser.add_option("-b", "--barcode_fileName", type="string", dest="barcodeFileName", help="Specify a name for the barcodes CSV file")
@@ -272,38 +275,41 @@ if __name__ == '__main__':
     
     if (opts.doSilent is None):
         printAtStart()
-
+    
     if (opts.barcodeFileName is None):
         print ('\nERROR: You need to specify a .csv file to parse\n')
         parser.print_help()
         sys.exit(1)
         
-    # now check to see if we are testing a range or clustering nicely?
+        # now check to see if we are testing a range or clustering nicely?
+    do_plain_jane = False
     if (opts.numClusts is None):
-        print ('\nERROR: You need to specify the number of clusters\n')
-        parser.print_help()
-        sys.exit(1)
-    if(re.search(':', opts.numClusts) is None):
-        # straight up custer and print
-        only_clust = False
+        do_plain_jane = True
+        num_clusters = 1
+        print "\n\nNo clustering provided... barcode will be produced from start to finish of sequence\n\n"
     else:
-        only_clust = True
+        num_clusters = opts.numClusts
+        if(re.search(':', opts.numClusts) is None):
+            # straight up custer and print
+            only_clust = False
+        else:
+            only_clust = True
         
-    if((opts.imageName is None) and (only_clust is False)):
-        print ('\nERROR: You need to specify an image name\n')
-        parser.print_help()
-        sys.exit(1)
-        
+        if((opts.imageName is None) and (only_clust is False)):
+            print ('\nERROR: You need to specify an image name\n')
+            parser.print_help()
+            sys.exit(1)
+    
     if(opts.isAverages is None):
         doAves = False
     else:
         doAves = True
-
+    
     # get a log file happenin'
     barcode_log = "barcode_plotz.log"
     if(opts.reportName):
         barcode_log = opts.reportName
-
+    
     #check that the breaks are kosher
     breaks = "16:8"
     comma_break = False
@@ -324,20 +330,21 @@ if __name__ == '__main__':
     r = robjects.r
     loadData(opts.barcodeFileName, r)
     
-    if(only_clust):
-        # do clustering only!
-        print "\n\n***Cluster testing.\nyou will need to look at the following files:\n * heirachical_clusters.pdf\n * internal_validation_clusters.pdf\n * stability_validation_clusters.pdf\n\n"
-        clustRTest(opts.numClusts, r)
-        sys.exit(0)
-
-    # clustering
-    if(opts.doHClust is None):
-        # kmeans
-        clustKMeans(opts.numClusts, r)
-    else:
-        clustHClust(opts.numClusts, r)
-
+    if(do_plain_jane is False):
+        if(only_clust):
+            # do clustering only!
+            print "\n\n***Cluster testing.\nyou will need to look at the following files:\n * heirachical_clusters.pdf\n * internal_validation_clusters.pdf\n * stability_validation_clusters.pdf\n\n"
+            clustRTest(opts.numClusts, r)
+            sys.exit(0)
+        
+        # clustering
+        if(opts.doHClust is None):
+            # kmeans
+            clustKMeans(opts.numClusts, r)
+        else:
+            clustHClust(opts.numClusts, r)
+    
     # make the heatmap
     openRImageDevice(opts.imageName, r)
-    produceMap(barcode_log, opts.numClusts, breaks, comma_break, doAves, r)
+    produceMap(barcode_log, num_clusters, breaks, comma_break, doAves, do_plain_jane, r)
     closeRImageDevice(r)
