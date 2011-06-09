@@ -76,6 +76,12 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
+    
+    if(opts.samfilename is None):
+        print('You have not specified an output file with -s')
+        parser.print_help()
+        sys.exit(1)
+    
 
     # do stuff
     mkindex(opts.database, algorithm)
