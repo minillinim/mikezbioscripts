@@ -39,7 +39,8 @@ def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
 def samse(database, sai_1, readfile_1, outfile):
     os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
     
-
+def bwasw(database, readfile_1, outfile):
+    os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -53,11 +54,11 @@ if __name__ == '__main__':
     parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the .aln files etc after [default: false]")
     parser.add_option("-s", "--sam_filename", type="string", dest="samfilename", help="The name for the final sam file name [default: tmp.sam]")
     parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
-    
+    parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
 
     # get and check options
     (opts, args) = parser.parse_args()
-    if(opts.singleEnd):
+    if(opts.singleEnd or opts.longReads):
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
@@ -76,21 +77,24 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
-    
+
     if(opts.samfilename is None):
         print('You have not specified an output file with -s')
         parser.print_help()
         sys.exit(1)
-    
+
 
     # do stuff
     mkindex(opts.database, algorithm)
-    aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai")
-    if(doSings is False):
-        aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai")
-        sampe(opts.database, "out_bwa_sa1.sai", "out_bwa_sa2.sai", opts.readfile_1, opts.readfile_2, opts.samfilename)
+    if(opts.longReads):
+        bwasw(opts.database, opts.readfile_1, opts.samfilename)
     else:
-        samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
+        aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai")
+        if(doSings is False):
+            aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai")
+            sampe(opts.database, "out_bwa_sa1.sai", "out_bwa_sa2.sai", opts.readfile_1, opts.readfile_2, opts.samfilename)
+        else:
+            samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
 
     # clean up
     if(opts.keepfiles is None):

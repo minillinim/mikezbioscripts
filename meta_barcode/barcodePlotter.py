@@ -64,7 +64,7 @@ def produceMap(reportFileName, num_clusts, breaks, commaBreak, isAverages, plain
         num_breaks = len(breaks_split) - 1
     
     # make a palette
-    r('rgbs_G <- cbind(seq(0,180, length=256), seq(0,255, length=256), seq(0,180, length=256)) / 255;')
+    r('rgbs_G <- cbind(seq(0,100, length=256), seq(0,255, length=256), seq(0,100, length=256)) / 255;')
     r('cols_G <- rgb(rgbs_G[,1], rgbs_G[,2], rgbs_G[,3]);')
     col_step = int((255/num_breaks))
     
