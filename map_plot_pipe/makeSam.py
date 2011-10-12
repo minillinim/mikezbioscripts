@@ -3,8 +3,6 @@ import subprocess
 import os
 from optparse import OptionParser
 import sys
-from rpy2 import *
-import rpy2.robjects as robjects
 ###############################################################################
 #
 #    makesam.py
