@@ -237,7 +237,7 @@ sub cut_reads {
 sub revcompl {
     my ($seq) = @_;
     $seq =~ tr/ACGTacgt/TGCAtgca/;
-    return reverse $seq;
+    return reverse scalar $seq;
 }
 
 sub lowlexi {
