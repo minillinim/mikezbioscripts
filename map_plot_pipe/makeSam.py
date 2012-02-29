@@ -49,7 +49,8 @@ if __name__ == '__main__':
     parser.add_option("-2", "--reads_2", type="string", dest="readfile_2", help="The second data of a paired read file")
     parser.add_option("-d", "--database", type="string", dest="database", help="The scaffold, query, database...")
     parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
-    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the .aln files etc after [default: false]")
+    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
+    parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
     parser.add_option("-s", "--sam_filename", type="string", dest="samfilename", help="The name for the final sam file name [default: tmp.sam]")
 #    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
@@ -84,8 +85,12 @@ if __name__ == '__main__':
         sys.exit(1)
 
 
-    # do stuff
-    mkindex(opts.database, algorithm)
+    # create indexes if required
+    if(opts.keptfiles is None):
+        print('making indices')
+        mkindex(opts.database, algorithm)
+
+    # run the actual alignment
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, opts.samfilename)
     else:
@@ -97,7 +102,7 @@ if __name__ == '__main__':
             samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
 
     # clean up
-    if(opts.keepfiles is None):
+    if(opts.keepfiles is None and opts.keptfiles is None):
         os.system('rm '+opts.database+'.amb')
         os.system('rm '+opts.database+'.ann')
         os.system('rm '+opts.database+'.bwt')

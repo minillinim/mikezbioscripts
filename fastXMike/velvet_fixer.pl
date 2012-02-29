@@ -77,7 +77,7 @@ close $outfh;
 sub revcompl {
     my ($rev) = @_;
     $rev =~ tr/ACGTacgt/TGCAtgca/; 
-    return reverse $rev;
+    return reverse scalar $rev;
 }
     
 ######################################################################
