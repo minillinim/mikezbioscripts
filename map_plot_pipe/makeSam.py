@@ -32,13 +32,22 @@ def aln(database, readfile, outfile, threads):
     os.system('bwa aln -t '+threads+' '+database+' '+readfile+' > '+outfile)
 
 def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
-    os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
+    if outfile is None:
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2)
+    else:
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
 
 def samse(database, sai_1, readfile_1, outfile):
-    os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
-    
+    if outfile is None:
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1)
+    else:
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
+
 def bwasw(database, readfile_1, outfile):
-    os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
+    if outfile is None:
+        os.system('bwa bwasw '+database+' '+readfile_1 )
+    else:
+        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -51,7 +60,8 @@ if __name__ == '__main__':
     parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
     parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
     parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
-    parser.add_option("-s", "--sam_filename", type="string", dest="samfilename", help="The name for the final sam file name [default: tmp.sam]")
+    parser.add_option("-s", "--sam_filename", type="string",
+            dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
 #    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="string", dest="threads",
@@ -78,12 +88,12 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
-
+"""
     if(opts.samfilename is None):
         print('You have not specified an output file with -s')
         parser.print_help()
         sys.exit(1)
-
+"""
 
     # create indexes if required
     if(opts.keptfiles is None):
