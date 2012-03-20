@@ -48,6 +48,11 @@ def bwasw(database, readfile_1, outfile):
         os.system('bwa bwasw '+database+' '+readfile_1 )
     else:
         os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
+
+def safeRemove(fileName):
+    if os.path.isfile(fileName):
+        os.system('rm ' + fileName)
+
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -88,12 +93,6 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
-"""
-    if(opts.samfilename is None):
-        print('You have not specified an output file with -s')
-        parser.print_help()
-        sys.exit(1)
-"""
 
     # create indexes if required
     if(opts.keptfiles is None):
@@ -113,15 +112,15 @@ if __name__ == '__main__':
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
-        os.system('rm '+opts.database+'.amb')
-        os.system('rm '+opts.database+'.ann')
-        os.system('rm '+opts.database+'.bwt')
-        os.system('rm '+opts.database+'.pac')
-        os.system('rm '+opts.database+'.rbwt')
-        os.system('rm '+opts.database+'.rpac')
-        os.system('rm '+opts.database+'.rsa')
-        os.system('rm '+opts.database+'.sa')
-        os.system('rm out_bwa_sa1.sai')
+        safeRemove(opts.database+'.amb')
+        safeRemove(opts.database+'.ann')
+        safeRemove(opts.database+'.bwt')
+        safeRemove(opts.database+'.pac')
+        safeRemove(opts.database+'.rbwt')
+        safeRemove(opts.database+'.rpac')
+        safeRemove(opts.database+'.rsa')
+        safeRemove(opts.database+'.sa')
+        safeRemove('out_bwa_sa1.sai')
         if(doSings is False):
-            os.system('rm out_bwa_sa2.sai')
+            safeRemove('out_bwa_sa2.sai')
 
