@@ -28,17 +28,26 @@ import sys
 def mkindex(database, algorithm):
     os.system('bwa index -a '+algorithm+' '+database)
 
-def aln(database, readfile, outfile):
-    os.system('bwa aln '+database+' '+readfile+' > '+outfile)
+def aln(database, readfile, outfile, threads):
+    os.system('bwa aln -t '+threads+' '+database+' '+readfile+' > '+outfile)
 
 def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
-    os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
+    if outfile is None:
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2)
+    else:
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
 
 def samse(database, sai_1, readfile_1, outfile):
-    os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
-    
+    if outfile is None:
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1)
+    else:
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
+
 def bwasw(database, readfile_1, outfile):
-    os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
+    if outfile is None:
+        os.system('bwa bwasw '+database+' '+readfile_1 )
+    else:
+        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -49,14 +58,18 @@ if __name__ == '__main__':
     parser.add_option("-2", "--reads_2", type="string", dest="readfile_2", help="The second data of a paired read file")
     parser.add_option("-d", "--database", type="string", dest="database", help="The scaffold, query, database...")
     parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
-    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the .aln files etc after [default: false]")
-    parser.add_option("-s", "--sam_filename", type="string", dest="samfilename", help="The name for the final sam file name [default: tmp.sam]")
-    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
+    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
+    parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
+    parser.add_option("-s", "--sam_filename", type="string",
+            dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
+#    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
+    parser.add_option("-t", "--threads", type="string", dest="threads",
+            default="1", help="The number of threads to use when aligning")
 
     # get and check options
     (opts, args) = parser.parse_args()
-    if(opts.singleEnd or opts.longReads):
+    if(opts.readfile_2 is None):
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
@@ -65,8 +78,8 @@ if __name__ == '__main__':
             sys.exit(1)
     else:
         doSings = False
-        if (opts.database is None or opts.readfile_2 is None or opts.readfile_1 is None ):
-            print ('You need to specify a multiple fasta file and TWO read files (paired)')
+        if (opts.database is None or opts.readfile_1 is None ):
+            print ('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d')
             parser.print_help()
             sys.exit(1)
 
@@ -75,27 +88,31 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
-
+"""
     if(opts.samfilename is None):
         print('You have not specified an output file with -s')
         parser.print_help()
         sys.exit(1)
+"""
 
+    # create indexes if required
+    if(opts.keptfiles is None):
+        print('making indices')
+        mkindex(opts.database, algorithm)
 
-    # do stuff
-    mkindex(opts.database, algorithm)
+    # run the actual alignment
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, opts.samfilename)
     else:
-        aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai")
+        aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai", opts.threads)
         if(doSings is False):
-            aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai")
+            aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai", opts.threads)
             sampe(opts.database, "out_bwa_sa1.sai", "out_bwa_sa2.sai", opts.readfile_1, opts.readfile_2, opts.samfilename)
         else:
             samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
 
     # clean up
-    if(opts.keepfiles is None):
+    if(opts.keepfiles is None and opts.keptfiles is None):
         os.system('rm '+opts.database+'.amb')
         os.system('rm '+opts.database+'.ann')
         os.system('rm '+opts.database+'.bwt')
