@@ -35,19 +35,19 @@ def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     if outfile is None:
         os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2)
     else:
-        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile)
 
 def samse(database, sai_1, readfile_1, outfile):
     if outfile is None:
         os.system('bwa samse '+database+' '+sai_1+' '+readfile_1)
     else:
-        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile)
 
 def bwasw(database, readfile_1, outfile):
     if outfile is None:
         os.system('bwa bwasw '+database+' '+readfile_1 )
     else:
-        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
+        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile )
 
 def safeRemove(fileName):
     if os.path.isfile(fileName):
