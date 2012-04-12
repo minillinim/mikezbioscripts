@@ -67,7 +67,7 @@ if __name__ == '__main__':
     parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
     parser.add_option("-s", "--sam_filename", type="string",
             dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
-#    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
+    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="string", dest="threads",
             default="1", help="The number of threads to use when aligning")
