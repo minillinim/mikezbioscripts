@@ -109,7 +109,7 @@ if(exists $global_options->{'ave'}) {
 # a place to store good sequences -> shared across threads!
 my @global_good_seqs = ();
 my $global_good_seqs_counter = 0;
-my $still_parsing = 1;
+my $global_still_parsing = 1;
 
 # keep count of where we're at
 my $global_update_amount = 1000;
@@ -121,7 +121,7 @@ my $global_rejected_seqs = 0;
 
 share (@global_good_seqs);
 share ($global_good_seqs_counter);
-share ($still_parsing);
+share ($global_still_parsing);
 share ($global_valid_seqs);
 
 # open the output file
@@ -161,42 +161,49 @@ while(1 == $keep_parsing)
             if($global_good_seqs_counter > $#global_good_seqs) {
                 my $keep_waiting = 0;
                 {
-                    lock($still_parsing);
-                    $keep_waiting = $still_parsing;
+                    lock($global_still_parsing);
+                    $keep_waiting = $global_still_parsing;
                 }
                 
-                while(1 == $still_parsing) { 
+                while(1 == $global_still_parsing) {
                     # give the parser a chance to catch up
                     sleep(1);
                     # check if we have something to do yet
                     last if($global_good_seqs_counter <= $#global_good_seqs);
                     # perhaps we can go through this list again...
                     {
-                        lock($still_parsing);
-                        $keep_waiting = $still_parsing;
+                        lock($global_still_parsing);
+                        $keep_waiting = $global_still_parsing;
                     }
                 }
                 {
-                    lock($still_parsing);
-                    last if((0 == $still_parsing) and ($global_good_seqs_counter > $#global_good_seqs));
+                    lock($global_still_parsing);
+                    if((0 == $global_still_parsing) and ($global_good_seqs_counter > $#global_good_seqs))
+                    {
+                        $thread_counter = $global_working_threads;
+                        $keep_parsing = 0;
+                        last;
+                    }
                 }
             }
-            
-            # got a sequence to parse!
-            my $seq_id = $global_good_seqs[$global_good_seqs_counter];
-            $global_good_seqs_counter++;
-            my $seq_string = $global_good_seqs[$global_good_seqs_counter];
-            $global_good_seqs_counter++;
-            
-            # cut barcodes on a new thread
-            $num_started_this_loop++;
-            $global_parsed_seqs++;
-            #print "starting: $seq_id $global_parsed_seqs\n";
-            
-            # DO NOT REMOVE THIS TWO STEP THREAD START!
-            # SEE: http://www.perlmonks.org/?node_id=265269
-            my ($thr) = threads->new(\&makeSeqBarcodes, ($seq_id, $seq_string));
-            $all_threads[$thread_counter] = $thr;
+            if(1 == $keep_parsing)
+            {
+                # got a sequence to parse!
+                my $seq_id = $global_good_seqs[$global_good_seqs_counter];
+                $global_good_seqs_counter++;
+                my $seq_string = $global_good_seqs[$global_good_seqs_counter];
+                $global_good_seqs_counter++;
+
+                # cut barcodes on a new thread
+                $num_started_this_loop++;
+                $global_parsed_seqs++;
+                #print "starting: $seq_id $global_parsed_seqs\n";
+                
+                # DO NOT REMOVE THIS TWO STEP THREAD START!
+                # SEE: http://www.perlmonks.org/?node_id=265269
+                my ($thr) = threads->new(\&makeSeqBarcodes, ($seq_id, $seq_string));
+                $all_threads[$thread_counter] = $thr;
+            }
         }
     }
     
@@ -280,13 +287,14 @@ sub packSeqNIDs {
                 $global_valid_seqs++;
                 #print "--> $global_valid_seqs\n";
             }
+            
         }
     }
     
     # let the other threads know that we're done!
     {
-        lock($still_parsing);
-        $still_parsing = 0;
+        lock($global_still_parsing);
+        $global_still_parsing = 0;
     }
 }
 
