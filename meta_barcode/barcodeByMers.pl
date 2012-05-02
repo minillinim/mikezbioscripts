@@ -287,7 +287,6 @@ sub packSeqNIDs {
                 $global_valid_seqs++;
                 #print "--> $global_valid_seqs\n";
             }
-            
         }
     }
     
@@ -468,7 +467,7 @@ sub makeMers {
         $output_hash{lowlexi(@$mer_array_ref[$i])} = @$gc_array_ref[$i];
     }
 
-    # the output_hash now holds a (perhaps laurenized) hash of mers => gc count
+    # the output_hash now holds a laurenized hash of mers => gc count
     my @output_array = ();
     
     # sort by GC if need be
