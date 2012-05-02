@@ -78,7 +78,7 @@ my $global_num_threads = overrideDefault(1, 'threads');
 
 # keep count of where we're at
 my $global_num_done = 0;
-my $global_update_amount = 10000;
+my $global_update_amount = 1000;
 my $global_num_rejected = 0;
 
 if(!exists $global_options->{'silent'}) {
@@ -114,7 +114,7 @@ printOutHeaderRow($global_out_fh);
 # thread management
 my @all_threads = ();
 my $active_thread = 0;
-my $last_thread = -1;
+my $threads_active = 0;
 
 my $seqio = Bio::SeqIO->new(-file => $global_options->{'in'}, '-format' => 'Fasta');
 
@@ -127,37 +127,56 @@ foreach my $thread (1..$global_num_threads)
     
     # cut barcodes on a new thread
     push(@all_threads, threads->new(\&makeSeqBarcodes, ($seq_id, $seq_string)));
-    $last_thread++;
+    $threads_active++;
 }
 
 # now go through and join the threads, start new ones if necessary!
-my $get_more = 1;
-my $update_count = $global_update_amount;
-if(-1 != $last_thread)
+
+if(0 != $threads_active)
 {
     # at least one thread was started!
+    my $get_more = 1;
+    my $update_count = $global_update_amount;
+    my @super_full = ();
+    my @super_aves = ();
     while(1) {
         # get the next thread and wait for him to complete
         last if($active_thread > $#all_threads);
         my $this_thread = $all_threads[$active_thread];
         $active_thread++;
         my ($full_bcode, $aves_bcode) = $this_thread->join;
+        $threads_active--;
         
-        # print to file
-        print $global_out_fh $full_bcode;
-        print $global_aves_fh $aves_bcode;
+        # Save on IO ops
+        push @super_full, $full_bcode;
+        push @super_aves, $aves_bcode;
         
-        # update the user
+        # print print and update the user
         $global_num_done++;
-        if(!exists $global_options->{'silent'})
+        $update_count--;
+        if(0 == $update_count)
         {
-            $update_count--;
-            if(0 == $update_count)
+            if(!exists $global_options->{'silent'})
             {
                 print "Processed: $global_num_done\n";
-                $update_count = $global_update_amount;
             }
+
+            # print now!
+            foreach my $line (@super_full)
+            {
+                print $global_out_fh $line;
+            }
+            foreach my $line (@super_aves)
+            {
+                print $global_aves_fh $line;
+            }
+            
+            $#super_full = -1;
+            $#super_aves = -1;
+            
+            $update_count = $global_update_amount;
         }
+        
         # try to get some more seqs
         if(1 == $get_more)
         {
@@ -166,6 +185,7 @@ if(-1 != $last_thread)
             {
                 # got a sequence!
                 push(@all_threads, threads->new(\&makeSeqBarcodes, ($seq_id, $seq_string)));
+                $threads_active++; 
             }
             else
             {
@@ -174,7 +194,17 @@ if(-1 != $last_thread)
             }
         }
     }
+    # print remaining!
+    foreach my $line (@super_full)
+    {
+        print $global_out_fh $line;
+    }
+    foreach my $line (@super_aves)
+    {
+        print $global_aves_fh $line;
+    }
 }
+
 
 # close the files
 close($global_out_fh);

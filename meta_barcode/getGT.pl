@@ -204,7 +204,7 @@ sub checkParams {
     #-----
     # Do any and all options checking here...
     #
-    my @standard_options = ( "cutoff|c:i", "fasta|f:s", "aux|a:s", "auxh|h:s", "auxs|s:s", "tag|t:s", "help|h+");
+    my @standard_options = ( "cutoff|c:i", "fasta|f:s", "aux:s", "auxh:s", "auxs:s", "tag|t:s", "help|h+");
     my %options;
 
     # Add any other command line options, and the code to handle them
@@ -406,9 +406,9 @@ __DATA__
       -cutoff -c INT               Cutoff to select above (inclusive)
       -fasta -f FILE               Fasta file to parse
       [-tag -t STRING]             Tag to attach to processed files [default: GT_cutoff]
-      [-aux -a FILE[,FILE...]]     Auxilary files to parse
-      [-auxh -h INT[,INT...]]      Header flags for aux files
-      [-auxs -s CHAR[,CHAR]...]]   The separators used in the aux files [default ',']
+      [-aux FILE[,FILE...]]        Auxilary files to parse
+      [-auxh INT[,INT...]]         Header flags for aux files
+      [-auxs CHAR[,CHAR]...]]      The separators used in the aux files [default ',']
                                    Use 'c' == COMMA, 't' = TAB
       [-help -h]                   Displays basic usage information
          
