@@ -101,7 +101,8 @@ if __name__ == '__main__':
 
     # run the actual alignment
     sai_1 = opts.readfile_1+"_"+opts.database+".sa1.sai"
-    sai_2 = opts.readfile_2+"_"+opts.database+".sa2.sai"
+    if(not doSings):
+        sai_2 = opts.readfile_2+"_"+opts.database+".sa2.sai"
     
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, opts.samfilename)
