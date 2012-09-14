@@ -7,7 +7,7 @@ import sys
 #
 #    makesam.py
 #    Wrapper to produce a .sam file for use in pair plotting and general chicanery
-#    Copyright (C) 2010 Michael Imelfort
+#    Copyright (C) 2010-2012 Michael Imelfort
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -100,27 +100,31 @@ if __name__ == '__main__':
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
+    sai_1 = opts.readfile_1+".sa1.sai"
+    sai_2 = opts.readfile_2+".sa2.sai"
+    
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, opts.samfilename)
     else:
-        aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai", opts.threads)
-        if(doSings is False):
-            aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai", opts.threads)
-            sampe(opts.database, "out_bwa_sa1.sai", "out_bwa_sa2.sai", opts.readfile_1, opts.readfile_2, opts.samfilename)
+        aln(opts.database, opts.readfile_1, sai_1, opts.threads)
+        if(not doSings):
+            aln(opts.database, opts.readfile_2, sai_2, opts.threads)
+            sampe(opts.database, sai_1, sai_2, opts.readfile_1, opts.readfile_2, opts.samfilename)
         else:
-            samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
+            samse(opts.database, sai_1, opts.readfile_1, opts.samfilename)
 
     # clean up
-    if(opts.keepfiles is None and opts.keptfiles is None):
-        safeRemove(opts.database+'.amb')
-        safeRemove(opts.database+'.ann')
-        safeRemove(opts.database+'.bwt')
-        safeRemove(opts.database+'.pac')
-        safeRemove(opts.database+'.rbwt')
-        safeRemove(opts.database+'.rpac')
-        safeRemove(opts.database+'.rsa')
-        safeRemove(opts.database+'.sa')
-        safeRemove('out_bwa_sa1.sai')
-        if(doSings is False):
-            safeRemove('out_bwa_sa2.sai')
+    if(opts.keepfiles is None):
+        if(opts.keptfiles is None):
+            safeRemove(opts.database+'.amb')
+            safeRemove(opts.database+'.ann')
+            safeRemove(opts.database+'.bwt')
+            safeRemove(opts.database+'.pac')
+            safeRemove(opts.database+'.rbwt')
+            safeRemove(opts.database+'.rpac')
+            safeRemove(opts.database+'.rsa')
+            safeRemove(opts.database+'.sa')
+        safeRemove(sai_1)
+        if(not doSings):
+            safeRemove(sai_2)
 
