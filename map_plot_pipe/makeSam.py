@@ -35,19 +35,19 @@ def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     if outfile is None:
         os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2)
     else:
-        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile+'.sam')
+        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile)
 
 def samse(database, sai_1, readfile_1, outfile):
     if outfile is None:
         os.system('bwa samse '+database+' '+sai_1+' '+readfile_1)
     else:
-        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile+'.sam')
+        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile)
 
 def bwasw(database, readfile_1, outfile):
     if outfile is None:
         os.system('bwa bwasw '+database+' '+readfile_1 )
     else:
-        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile+'.sam' )
+        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile )
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -88,12 +88,6 @@ if __name__ == '__main__':
         algorithm = "is"
     else:
         algorithm = opts.algorithm
-"""
-    if(opts.samfilename is None):
-        print('You have not specified an output file with -s')
-        parser.print_help()
-        sys.exit(1)
-"""
 
     # create indexes if required
     if(opts.keptfiles is None):
@@ -101,27 +95,34 @@ if __name__ == '__main__':
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
+    output_file = opts.outfilename
+    if opts.outfilename is not None and not output_file.endswith('.sam'):
+        output_file += '.sam'
+    #create tmp files
+    sai1 = "out_bwa_sa1."+str(os.getpid())+"."+str(os.getuid())+".sai"
+    sai2 = "out_bwa_sa2."+str(os.getpid())+"."+str(os.getuid())+".sai"
     if(opts.longReads):
-        bwasw(opts.database, opts.readfile_1, opts.samfilename)
+        bwasw(opts.database, opts.readfile_1, output_file)
     else:
-        aln(opts.database, opts.readfile_1, "out_bwa_sa1.sai", opts.threads)
+        aln(opts.database, opts.readfile_1, sai1, opts.threads)
         if(doSings is False):
-            aln(opts.database, opts.readfile_2, "out_bwa_sa2.sai", opts.threads)
-            sampe(opts.database, "out_bwa_sa1.sai", "out_bwa_sa2.sai", opts.readfile_1, opts.readfile_2, opts.samfilename)
+            aln(opts.database, opts.readfile_2, sai2, opts.threads)
+            sampe(opts.database, sai1, sai2, opts.readfile_1, opts.readfile_2,
+                  output_file)
         else:
-            samse(opts.database, "out_bwa_sa1.sai", opts.readfile_1, opts.samfilename)
+            samse(opts.database, sai1, opts.readfile_1, output_file)
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
-        os.system('rm '+opts.database+'.amb')
-        os.system('rm '+opts.database+'.ann')
-        os.system('rm '+opts.database+'.bwt')
-        os.system('rm '+opts.database+'.pac')
-        os.system('rm '+opts.database+'.rbwt')
-        os.system('rm '+opts.database+'.rpac')
-        os.system('rm '+opts.database+'.rsa')
-        os.system('rm '+opts.database+'.sa')
-        os.system('rm out_bwa_sa1.sai')
-        if(doSings is False):
-            os.system('rm out_bwa_sa2.sai')
+        os.remove(opts.database+'.amb')
+        os.remove(opts.database+'.ann')
+        os.remove(opts.database+'.bwt')
+        os.remove(opts.database+'.pac')
+       # os.remove(opts.database+'.rbwt')
+       # os.remove(opts.database+'.rpac')
+       # os.remove(opts.database+'.rsa')
+        os.remove(opts.database+'.sa')
+    os.remove(sai1)
+    if(doSings is False):
+        os.remove(sai2)
 
