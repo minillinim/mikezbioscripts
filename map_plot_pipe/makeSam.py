@@ -7,7 +7,7 @@ import sys
 #
 #    makesam.py
 #    Wrapper to produce a .sam file for use in pair plotting and general chicanery
-#    Copyright (C) 2010 Michael Imelfort
+#    Copyright (C) 2010-2012 Michael Imelfort
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -48,6 +48,11 @@ def bwasw(database, readfile_1, outfile):
         os.system('bwa bwasw '+database+' '+readfile_1 )
     else:
         os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile )
+
+def safeRemove(fileName):
+    if os.path.isfile(fileName):
+        os.system('rm ' + fileName)
+
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -62,7 +67,7 @@ if __name__ == '__main__':
     parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
     parser.add_option("-s", "--sam_filename", type="string",
             dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
-#    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
+    parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="string", dest="threads",
             default="1", help="The number of threads to use when aligning")
@@ -114,15 +119,15 @@ if __name__ == '__main__':
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
-        os.remove(opts.database+'.amb')
-        os.remove(opts.database+'.ann')
-        os.remove(opts.database+'.bwt')
-        os.remove(opts.database+'.pac')
-       # os.remove(opts.database+'.rbwt')
-       # os.remove(opts.database+'.rpac')
-       # os.remove(opts.database+'.rsa')
-        os.remove(opts.database+'.sa')
-    os.remove(sai1)
+        safeRemove(opts.database+'.amb')
+        safeRemove(opts.database+'.ann')
+        safeRemove(opts.database+'.bwt')
+        safeRemove(opts.database+'.pac')
+        safeRemove(opts.database+'.rbwt')
+        safeRemove(opts.database+'.rpac')
+        safeRemove(opts.database+'.rsa')
+        safeRemove(opts.database+'.sa')
+    safeRemove(sai1)
     if(doSings is False):
-        os.remove(sai2)
+        safeRemove(sai2)
 

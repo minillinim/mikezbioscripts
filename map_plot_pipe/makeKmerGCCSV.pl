@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 ###############################################################################
 #
-#   makeKmerGCCSV.pl  -- does just that
-#    Copyright (C) 2009 2010 Lauren Bragg, Michael Imelfort
+#    makeKmerGCCSV.pl  -- does just that
+#    Copyright (C) 2009-2012 Lauren Bragg, Michael Imelfort
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -405,7 +405,7 @@ sub printAtStart {
 print<<"EOF";
 ----------------------------------------------------------------
  $0
- Copyright (C) 2009 2010 Lauren Bragg, Michael Imelfort
+ Copyright (C) 2009 - 2012 Lauren Bragg, Michael Imelfort
 
  This program comes with ABSOLUTELY NO WARRANTY;
  This is free software, and you are welcome to redistribute it
@@ -422,7 +422,7 @@ __DATA__
 
 =head1 COPYRIGHT
 
-   copyright (C) 2009 2010 Lauren Bragg, Michael Imelfort
+   copyright (C) 2009 - 2012 Lauren Bragg, Michael Imelfort
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
