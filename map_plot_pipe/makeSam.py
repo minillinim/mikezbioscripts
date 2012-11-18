@@ -100,9 +100,9 @@ if __name__ == '__main__':
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
-    sai_1 = opts.readfile_1+"_"+opts.database+".sa1.sai"
+    sai_1 = opts.readfile_1+"_"+os.path.split(opts.database+".sa1.sai")[1]
     if(not doSings):
-        sai_2 = opts.readfile_2+"_"+opts.database+".sa2.sai"
+        sai_2 = opts.readfile_2+"_"+os.path.split(opts.database+".sa2.sai")[1]
     
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, opts.samfilename)
