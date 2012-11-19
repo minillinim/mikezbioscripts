@@ -3,6 +3,7 @@ import subprocess
 import os
 from optparse import OptionParser
 import sys
+import tempfile
 ###############################################################################
 #
 #    makesam.py
@@ -26,28 +27,28 @@ import sys
 
 
 def mkindex(database, algorithm):
-    os.system('bwa index -a '+algorithm+' '+database)
+    subprocess.call('bwa index -a '+ algorithm+' '+ database, shell=True)
 
 def aln(database, readfile, outfile, threads):
-    os.system('bwa aln -t '+threads+' '+database+' '+readfile+' > '+outfile)
+    subprocess.call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
 
 def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     if outfile is None:
-        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2)
+        subprocess.call('bwa sampe ' + database+ ' ' + sai_1+ ' ' + sai_2+ ' ' +  readfile_1+ ' ' +  readfile_2, shell=True)
     else:
-        os.system('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' > '+outfile)
+        subprocess.call('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' >'+outfile, shell=True)
 
 def samse(database, sai_1, readfile_1, outfile):
     if outfile is None:
-        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1)
+        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1, shell=True)
     else:
-        os.system('bwa samse '+database+' '+sai_1+' '+readfile_1+' > '+outfile)
+        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1+' >'+outfile, shell=True)
 
 def bwasw(database, readfile_1, outfile):
     if outfile is None:
-        os.system('bwa bwasw '+database+' '+readfile_1 )
+        subprocess.call('bwa bwasw '+database+' '+readfile_1, shell=True)
     else:
-        os.system('bwa bwasw '+database+' '+readfile_1+' >'+outfile )
+        subprocess.call('bwa bwasw '+database+' '+readfile_1+' >'+outfile , shell=True)
 
 def safeRemove(fileName):
     if os.path.isfile(fileName):
@@ -100,22 +101,25 @@ if __name__ == '__main__':
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
-    output_file = opts.outfilename
-    if opts.outfilename is not None and not output_file.endswith('.sam'):
-        output_file += '.sam'
+    output_file = None
+    if opts.samfilename is not None:
+        if opts.samfilename.endswith('.sam'):
+            output_file = opts.samfilename
+        else:
+            output_file = opts.samfilename + '.sam'
     #create tmp files
-    sai1 = "out_bwa_sa1."+str(os.getpid())+"."+str(os.getuid())+".sai"
-    sai2 = "out_bwa_sa2."+str(os.getpid())+"."+str(os.getuid())+".sai"
+    sai1 = tempfile.mkstemp(suffix='.sai')
+    sai2 = tempfile.mkstemp(suffix='.sai')
     if(opts.longReads):
         bwasw(opts.database, opts.readfile_1, output_file)
     else:
-        aln(opts.database, opts.readfile_1, sai1, opts.threads)
+        aln(opts.database, opts.readfile_1, sai1[1], opts.threads)
         if(doSings is False):
-            aln(opts.database, opts.readfile_2, sai2, opts.threads)
-            sampe(opts.database, sai1, sai2, opts.readfile_1, opts.readfile_2,
+            aln(opts.database, opts.readfile_2, sai2[1], opts.threads)
+            sampe(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
                   output_file)
         else:
-            samse(opts.database, sai1, opts.readfile_1, output_file)
+            samse(opts.database, sai1[1], opts.readfile_1, output_file)
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
@@ -127,7 +131,6 @@ if __name__ == '__main__':
         safeRemove(opts.database+'.rpac')
         safeRemove(opts.database+'.rsa')
         safeRemove(opts.database+'.sa')
-    safeRemove(sai1)
-    if(doSings is False):
-        safeRemove(sai2)
+    safeRemove(sai1[1])
+    safeRemove(sai2[1])
 
