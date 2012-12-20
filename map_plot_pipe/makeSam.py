@@ -51,14 +51,14 @@ def bwasw(database, readfile_1, outfile):
         subprocess.call('bwa bwasw '+database+' '+readfile_1+' >'+outfile , shell=True)
 
 def sampe_to_sorted_indexed_bam(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
-    cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -Subh - |samtools sort - '+outfile
+    cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile
     subprocess.call(cmd1, shell=True)
     # samtools index cannot be piped, so a tmpfile is required
     cmd2 = 'samtools index '+outfile+'.bam'
     subprocess.call(cmd2, shell=True)
     
 def samse_to_sorted_indexed_bam(database, sai_1, readfile_1, outfile):
-    cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -Subh - |samtools sort - '+outfile
+    cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile
     subprocess.call(cmd1, shell=True)
     # samtools index cannot be piped, so a tmpfile is required
     cmd2 = 'samtools index '+outfile+'.bam'
