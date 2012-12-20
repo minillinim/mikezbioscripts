@@ -95,13 +95,13 @@ if __name__ == '__main__':
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
-            print ('You need to specify a multiple fasta file and ONE read file (single ended)')
+            sys.stderr.write('You need to specify a multiple fasta file and ONE read file (single ended)'+"\n")
             parser.print_help()
             sys.exit(1)
     else:
         doSings = False
         if (opts.database is None or opts.readfile_1 is None ):
-            print ('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d')
+            sys.stderr.write('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d'+"\n")
             parser.print_help()
             sys.exit(1)
 
@@ -113,7 +113,8 @@ if __name__ == '__main__':
 
     # create indexes if required
     if(opts.keptfiles is None):
-        print('making indices')
+        sys.stderr.write('making indices'+"\n")
+        sys.stderr.flush
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
