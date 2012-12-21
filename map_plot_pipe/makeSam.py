@@ -50,6 +50,20 @@ def bwasw(database, readfile_1, outfile):
     else:
         subprocess.call('bwa bwasw '+database+' '+readfile_1+' >'+outfile , shell=True)
 
+def sampe_to_sorted_indexed_bam(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
+    cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile
+    subprocess.call(cmd1, shell=True)
+    # samtools index cannot be piped, so a tmpfile is required
+    cmd2 = 'samtools index '+outfile+'.bam'
+    subprocess.call(cmd2, shell=True)
+    
+def samse_to_sorted_indexed_bam(database, sai_1, readfile_1, outfile):
+    cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile
+    subprocess.call(cmd1, shell=True)
+    # samtools index cannot be piped, so a tmpfile is required
+    cmd2 = 'samtools index '+outfile+'.bam'
+    subprocess.call(cmd2, shell=True)
+
 def safeRemove(fileName):
     if os.path.isfile(fileName):
         os.system('rm ' + fileName)
@@ -68,6 +82,8 @@ if __name__ == '__main__':
     parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
     parser.add_option("-s", "--sam_filename", type="string",
             dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
+    parser.add_option("-b", "--bam_filename", type="string",
+            dest="bamfilename", help="Output a sorted indexed bam file, of this name")
     parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="string", dest="threads",
@@ -79,13 +95,13 @@ if __name__ == '__main__':
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
-            print ('You need to specify a multiple fasta file and ONE read file (single ended)')
+            sys.stderr.write('You need to specify a multiple fasta file and ONE read file (single ended)'+"\n")
             parser.print_help()
             sys.exit(1)
     else:
         doSings = False
         if (opts.database is None or opts.readfile_1 is None ):
-            print ('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d')
+            sys.stderr.write('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d'+"\n")
             parser.print_help()
             sys.exit(1)
 
@@ -97,7 +113,8 @@ if __name__ == '__main__':
 
     # create indexes if required
     if(opts.keptfiles is None):
-        print('making indices')
+        sys.stderr.write('making indices'+"\n")
+        sys.stderr.flush
         mkindex(opts.database, algorithm)
 
     # run the actual alignment
@@ -107,6 +124,14 @@ if __name__ == '__main__':
             output_file = opts.samfilename
         else:
             output_file = opts.samfilename + '.sam'
+
+    bam_output_file = None
+    if opts.bamfilename is not None:
+        if opts.bamfilename.endswith('.bam'):
+            bam_output_file = opts.bamfilename[:-4] #samtools renames the output file with .bam already
+        else:
+            bam_output_file = opts.bamfilename
+
     #create tmp files
     sai1 = tempfile.mkstemp(suffix='.sai')
     sai2 = tempfile.mkstemp(suffix='.sai')
@@ -116,10 +141,18 @@ if __name__ == '__main__':
         aln(opts.database, opts.readfile_1, sai1[1], opts.threads)
         if(doSings is False):
             aln(opts.database, opts.readfile_2, sai2[1], opts.threads)
-            sampe(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
-                  output_file)
+            if bam_output_file is None:
+                sampe(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
+                      output_file)
+            else:
+                sampe_to_sorted_indexed_bam(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
+                      bam_output_file)
         else:
-            samse(opts.database, sai1[1], opts.readfile_1, output_file)
+            if bam_output_file is None:
+                samse(opts.database, sai1[1], opts.readfile_1, output_file)
+            else:
+                samse_to_sorted_indexed_bam(opts.database, sai1[1], opts.readfile_1, bam_output_file)
+                
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
