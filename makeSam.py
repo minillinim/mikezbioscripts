@@ -27,57 +27,57 @@ import tempfile
 
 
 def mkindex(database, algorithm):
-    subprocess.call('bwa index -a '+ algorithm+' '+ database, shell=True)
+    subprocess.check_call('bwa index -a '+ algorithm+' '+ database, shell=True)
 
 def aln(database, readfile, outfile, threads):
-    subprocess.call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
+    subprocess.check_call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
 
 def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     if outfile is None:
-        subprocess.call('bwa sampe ' + database+ ' ' + sai_1+ ' ' + sai_2+ ' ' +  readfile_1+ ' ' +  readfile_2, shell=True)
+        subprocess.check_call('bwa sampe ' + database+ ' ' + sai_1+ ' ' + sai_2+ ' ' +  readfile_1+ ' ' +  readfile_2, shell=True)
     else:
-        subprocess.call('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' >'+outfile, shell=True)
+        subprocess.check_call('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' >'+outfile, shell=True)
 
 def samse(database, sai_1, readfile_1, outfile):
     if outfile is None:
-        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1, shell=True)
+        subprocess.check_call('bwa samse '+database+' '+sai_1+' '+readfile_1, shell=True)
     else:
-        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1+' >'+outfile, shell=True)
+        subprocess.check_call('bwa samse '+database+' '+sai_1+' '+readfile_1+' >'+outfile, shell=True)
 
 def bwasw(database, readfile_1, readfile_2, outfile, threads):
     if outfile is None:
         if readfile_2 is None:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1, shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1, shell=True)
         else:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2, shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2, shell=True)
     else:
         if readfile_2 is None:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' >'+outfile , shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' >'+outfile , shell=True)
         else:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' >'+outfile , shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' >'+outfile , shell=True)
 
 def bwasw_to_sorted_indexed_bam(database, readfile_1, readfile_2, outfile):
     if readfile_2 is None:
-        subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
+        subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
     else:
-        subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
+        subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
     # samtools index cannot be piped, so a tmpfile is required
     cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+    subprocess.check_call(cmd2, shell=True)
 
 def sampe_to_sorted_indexed_bam(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile
-    subprocess.call(cmd1, shell=True)
+    subprocess.check_call(cmd1, shell=True)
     # samtools index cannot be piped, so a tmpfile is required
     cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+    subprocess.check_call(cmd2, shell=True)
 
 def samse_to_sorted_indexed_bam(database, sai_1, readfile_1, outfile):
     cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile
-    subprocess.call(cmd1, shell=True)
+    subprocess.check_call(cmd1, shell=True)
     # samtools index cannot be piped, so a tmpfile is required
     cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+    subprocess.check_call(cmd2, shell=True)
 
 def safeRemove(fileName):
     if os.path.isfile(fileName):
@@ -173,7 +173,7 @@ if __name__ == '__main__':
                 samse(opts.database, sai1[1], opts.readfile_1, output_file)
             else:
                 samse_to_sorted_indexed_bam(opts.database, sai1[1], opts.readfile_1, bam_output_file)
-                
+
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
