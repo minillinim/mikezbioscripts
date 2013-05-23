@@ -27,57 +27,65 @@ import tempfile
 
 
 def mkindex(database, algorithm):
-    subprocess.call('bwa index -a '+ algorithm+' '+ database, shell=True)
+    subprocess.check_call('bwa index -a '+ algorithm+' '+ database, shell=True)
 
 def aln(database, readfile, outfile, threads):
-    subprocess.call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
+    subprocess.check_call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
+
+def mem_to_sorted_indexed_bam(database, reads1, reads2, outfile, threads, maxMemory):
+    cmd = 'bwa mem -t'+threads+' '+database+' '+reads1+' '+reads2+' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    print 'Running command:',cmd
+    subprocess.check_call(cmd, shell=True)
+    samtools_index(outfile)
 
 def sampe(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
     if outfile is None:
-        subprocess.call('bwa sampe ' + database+ ' ' + sai_1+ ' ' + sai_2+ ' ' +  readfile_1+ ' ' +  readfile_2, shell=True)
+        subprocess.check_call('bwa sampe ' + database+ ' ' + sai_1+ ' ' + sai_2+ ' ' +  readfile_1+ ' ' +  readfile_2, shell=True)
     else:
-        subprocess.call('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' >'+outfile, shell=True)
+        subprocess.check_call('bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' >'+outfile, shell=True)
 
 def samse(database, sai_1, readfile_1, outfile):
     if outfile is None:
-        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1, shell=True)
+        subprocess.check_call('bwa samse '+database+' '+sai_1+' '+readfile_1, shell=True)
     else:
-        subprocess.call('bwa samse '+database+' '+sai_1+' '+readfile_1+' >'+outfile, shell=True)
+        subprocess.check_call('bwa samse '+database+' '+sai_1+' '+readfile_1+' >'+outfile, shell=True)
 
 def bwasw(database, readfile_1, readfile_2, outfile, threads):
     if outfile is None:
         if readfile_2 is None:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1, shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1, shell=True)
         else:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2, shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2, shell=True)
     else:
         if readfile_2 is None:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' >'+outfile , shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' >'+outfile , shell=True)
         else:
-            subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' >'+outfile , shell=True)
+            subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' >'+outfile , shell=True)
 
-def bwasw_to_sorted_indexed_bam(database, readfile_1, readfile_2, outfile):
+def bwasw_to_sorted_indexed_bam(database, readfile_1, readfile_2, outfile, threads, maxMemory):
     if readfile_2 is None:
-        subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
+        subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile, shell=True)
     else:
-        subprocess.call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile , shell=True)
-    # samtools index cannot be piped, so a tmpfile is required
-    cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+        subprocess.check_call('bwa bwasw -t '+threads+' '+database+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile, shell=True)
+    samtools_index(outfile)
 
-def sampe_to_sorted_indexed_bam(database, sai_1, sai_2, readfile_1, readfile_2, outfile):
-    cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - |samtools sort - '+outfile
-    subprocess.call(cmd1, shell=True)
-    # samtools index cannot be piped, so a tmpfile is required
-    cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+def sampe_to_sorted_indexed_bam(database, sai_1, sai_2, readfile_1, readfile_2, outfile, threads, maxMemory):
+    cmd1 = 'bwa sampe '+database+' '+sai_1+' '+sai_2+' '+readfile_1+' '+readfile_2+' | samtools view -SubhF 4 - | samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    print 'Running command:',cmd1
+    subprocess.check_call(cmd1, shell=True)
+    samtools_index(outfile)
 
-def samse_to_sorted_indexed_bam(database, sai_1, readfile_1, outfile):
-    cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort - '+outfile
-    subprocess.call(cmd1, shell=True)
+def samse_to_sorted_indexed_bam(database, sai_1, readfile_1, outfile, threads, maxMemory):
+    cmd1 = 'bwa samse '+database+' '+sai_1+' '+readfile_1+' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    print 'Running command:',cmd1
+    subprocess.check_call(cmd1, shell=True)
+    samtools_index(outfile)
+
+def samtools_index(sorted_bam_file):
     # samtools index cannot be piped, so a tmpfile is required
-    cmd2 = 'samtools index '+outfile+'.bam'
-    subprocess.call(cmd2, shell=True)
+    cmd2 = 'samtools index '+sorted_bam_file+'.bam'
+    print 'Running command:',cmd2
+    subprocess.check_call(cmd2, shell=True)
 
 def safeRemove(fileName):
     if os.path.isfile(fileName):
@@ -101,8 +109,12 @@ if __name__ == '__main__':
             dest="bamfilename", help="Output a sorted indexed bam file, of this name")
     parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
-    parser.add_option("-t", "--threads", type="string", dest="threads",
+    parser.add_option("-t", "--threads", type="int", dest="threads",
             default="1", help="The number of threads to use when aligning")
+    parser.add_option("-m", "--memory", type="int", dest="maxMemory",
+            default=None, help="The amount of memory to use where possible (default 2GB*number of threads)")
+    parser.add_option("--bwa-aln", action="store_true", dest="use_aln",
+            default=False, help="Use 'bwa aln' to perform alignment (the default is bwa mem)")
 
     # get and check options
     (opts, args) = parser.parse_args()
@@ -147,34 +159,49 @@ if __name__ == '__main__':
         else:
             bam_output_file = opts.bamfilename
 
-    #create tmp files
-    sai1 = tempfile.mkstemp(suffix='.sai')
-    sai2 = tempfile.mkstemp(suffix='.sai')
-    
-    if(opts.longReads):
-        if bam_output_file is None:
-            bwasw(opts.database, opts.readfile_1,opts.readfile_2,
-                    output_file, opts.threads)
-        else:
-            bwasw_to_sorted_indexed_bam(opts.database,
-                    opts.readfile_1,opts.readfile_2, bam_output_file,
-                    opts.threads)
+    numThreads = str(opts.threads)
+    maxMemory = opts.maxMemory
+    if opts.maxMemory is None:
+      maxMemory = str(opts.threads*2)+'G' #Default to 2GBs per number of threads
+    maxMemory = str(maxMemory)
+    success = True
+
+    if (opts.use_aln or opts.longReads):
+      sai1 = tempfile.mkstemp(suffix='.sai')
+      sai2 = tempfile.mkstemp(suffix='.sai')
+      if(opts.longReads):
+          if bam_output_file is None:
+              bwasw(opts.database, opts.readfile_1,opts.readfile_2,
+                      output_file, opts.threads)
+          else:
+              bwasw_to_sorted_indexed_bam(opts.database,
+                      opts.readfile_1,opts.readfile_2, bam_output_file,
+                      opts.threads)
+      else:
+          aln(opts.database, opts.readfile_1, sai1[1], numThreads)
+          if(doSings is False):
+              aln(opts.database, opts.readfile_2, sai2[1], numThreads)
+              if bam_output_file is None:
+                  sampe(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
+                        output_file)
+              else:
+                  sampe_to_sorted_indexed_bam(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
+                        bam_output_file, numThreads, maxMemory)
+          else:
+              if bam_output_file is None:
+                  samse(opts.database, sai1[1], opts.readfile_1, output_file)
+              else:
+                  samse_to_sorted_indexed_bam(opts.database, sai1[1], opts.readfile_1, bam_output_file, numThreads, maxMemory)
+      safeRemove(sai1[1])
+      safeRemove(sai2[1])
     else:
-        aln(opts.database, opts.readfile_1, sai1[1], opts.threads)
-        if(doSings is False):
-            aln(opts.database, opts.readfile_2, sai2[1], opts.threads)
-            if bam_output_file is None:
-                sampe(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
-                      output_file)
-            else:
-                sampe_to_sorted_indexed_bam(opts.database, sai1[1], sai2[1], opts.readfile_1, opts.readfile_2,
-                      bam_output_file)
-        else:
-            if bam_output_file is None:
-                samse(opts.database, sai1[1], opts.readfile_1, output_file)
-            else:
-                samse_to_sorted_indexed_bam(opts.database, sai1[1], opts.readfile_1, bam_output_file)
-                
+      # Else we are using bwa-mem
+      if (opts.bamfilename is None):
+        sys.stderr.write("Sorry, sam output file format for bwa-mem is not supported at this time (though it relatively easy to implement)\n")
+        success = False
+      else:
+        mem_to_sorted_indexed_bam(opts.database, opts.readfile_1, opts.readfile_2, bam_output_file, numThreads, maxMemory)
+
 
     # clean up
     if(opts.keepfiles is None and opts.keptfiles is None):
@@ -186,6 +213,7 @@ if __name__ == '__main__':
         safeRemove(opts.database+'.rpac')
         safeRemove(opts.database+'.rsa')
         safeRemove(opts.database+'.sa')
-    safeRemove(sai1[1])
-    safeRemove(sai2[1])
+
+    if (success is not True):
+      exit(1)
 
