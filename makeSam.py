@@ -144,7 +144,6 @@ if __name__ == '__main__':
         sys.stderr.flush
         mkindex(opts.database, algorithm)
 
-    # run the actual alignment
     output_file = None
     if opts.samfilename is not None:
         if opts.samfilename.endswith('.sam'):
@@ -166,6 +165,7 @@ if __name__ == '__main__':
     maxMemory = str(maxMemory)
     success = True
 
+    # run the actual alignment
     if (opts.use_aln or opts.longReads):
       sai1 = tempfile.mkstemp(suffix='.sai')
       sai2 = tempfile.mkstemp(suffix='.sai')
