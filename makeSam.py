@@ -110,7 +110,7 @@ if __name__ == '__main__':
     parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="int", dest="threads",
-            default="1", help="The number of threads to use when aligning")
+            default="1", help="The number of threads to use where possible [default 1]")
     parser.add_option("-m", "--memory", type="int", dest="maxMemory",
             default=None, help="The amount of memory to use where possible (default 2GB*number of threads)")
     parser.add_option("--bwa-aln", action="store_true", dest="use_aln",
@@ -198,6 +198,9 @@ if __name__ == '__main__':
       # Else we are using bwa-mem
       if (opts.bamfilename is None):
         sys.stderr.write("Sorry, sam output file format for bwa-mem is not supported at this time (though it relatively easy to implement)\n")
+        success = False
+      elif (opts.singleEnd is True):
+        sys.stderr.write("Sorry, single ended mapping with bwa-mem is not supported at this time (though it relatively easy to implement)\n")
         success = False
       else:
         mem_to_sorted_indexed_bam(opts.database, opts.readfile_1, opts.readfile_2, bam_output_file, numThreads, maxMemory)
