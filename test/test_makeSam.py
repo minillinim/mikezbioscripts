@@ -62,6 +62,22 @@ class VerifyPostHocTests(unittest.TestCase):
     # Check the index exists also
     self.assertEqual(True, os.path.isfile(bamOutputFile+'.bai'))
 
+  def testBwaMemToSortedIndexedBamWithPairedFlag(self):
+    bamOutputFile = '/tmp/a'+'.bam'
+    subprocess.check_call(path_to_script+' -1 data/reads.fq.gz -p -d data/ref.fna -b '+bamOutputFile, shell=True)
+
+    samOutput = subprocess.check_output('samtools view '+bamOutputFile, shell=True)
+
+    # This is actually a little bit of a strange test because there is not enough reads for bwa mem to work out insert sizes automatically. So there's no pair stuff here at all.
+    expectedSamOutput = 'FCC0WM1ACXX:2:2106:7087:17037#TATCCAGA	161	E1D_contig_2582764	1325	60	62M38S	=	1477	252	GCTCCACATCGTATAATAGTAAGTCCCGCTGCCAGAGCCGCTTTCTGAATCCGTCATTTTGGCCCAGACTACCTCGACGACGACATCACTCTTAAGGTGC	bbbeeeeegggggiiihhiiiiifhiihiiiiiiihhiihhifhhiifgiiiighhhiihdgggeeeccdddbcccaccccccccccccccccbcbcbbb	NM:i:0	AS:i:62	XS:i:0'+"\n"
+    expectedSamOutput += 'FCC0WM1ACXX:2:2106:7087:17037#TATCCAGA	81	E1D_contig_2582764	1477	60	100M	=	1325	-252	GCAGTCACTGCACCGCAAGGAAGCACAGAACCTGCAATGATATTTCACATCGTGGGACTTAAATATCTTTTGGCATTGTTCACACTTGGGCTTTTCCTTC	cccccbbccccaccdddeeeeeeggfgggchiihiiihihfhffihgiihihhgghhhfiiihiiiiiihiihfiiihiihgihiiigggggeeeeebbb	NM:i:0	AS:i:100	XS:i:0'+"\n"
+    expectedSamOutput += "FCC0WM1ACXX:2:2308:9246:128896#TATCCAGA	121	E1D_contig_3	23	60	100M	=	23	0	AATACAACGGAATCCGCTTTCTCCCGCTGAAGCTGGGACGCTGGCTTAACGACTTCGACGAATCTCAAAAACGCAACGTCGTCGTTCTCGGCGATGAGAT\tccccccccdccccccccb^Ta__accb_cbbabcaccacc_bbbbaccccb^cccccdeeeeeggeiihg`hiihgggaihhhiiihgfgggeeeeebbb	NM:i:0	AS:i:100	XS:i:0"+"\n"
+
+    self.assertEqual(expectedSamOutput, samOutput)
+
+    # Check the index exists also
+    self.assertEqual(True, os.path.isfile(bamOutputFile+'.bai'))
+
 
 if __name__ == "__main__":
 	unittest.main()

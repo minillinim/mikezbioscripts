@@ -33,7 +33,13 @@ def aln(database, readfile, outfile, threads):
     subprocess.check_call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
 
 def mem_to_sorted_indexed_bam(database, reads1, reads2, outfile, threads, maxMemory):
-    cmd = 'bwa mem -t'+threads+' '+database+' '+reads1+' '+reads2+' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    """run bwa mem. Assume -p for bwa if reads2 is None, otherwise specify reads1 and reads2"""
+    bwa_cmd = 'bwa mem -t'+threads+' '+database+' '
+    if (reads2 is None):
+      bwa_cmd += '-p '+reads1
+    else:
+      bwa_cmd += reads1+' '+reads2
+    cmd = bwa_cmd + ' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
     print 'Running command:',cmd
     subprocess.check_call(cmd, shell=True)
     samtools_index(outfile)
@@ -99,6 +105,7 @@ if __name__ == '__main__':
     parser = OptionParser("\n\n %prog [options]")
     parser.add_option("-1", "--reads_1", type="string", dest="readfile_1", help="The first data of a paired read file")
     parser.add_option("-2", "--reads_2", type="string", dest="readfile_2", help="The second data of a paired read file")
+    parser.add_option("-p", "--paired", action="store_true", dest="paired", help="The first query file contains interleaved paired sequences [default: false]")
     parser.add_option("-d", "--database", type="string", dest="database", help="The scaffold, query, database...")
     parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
     parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
@@ -118,7 +125,7 @@ if __name__ == '__main__':
 
     # get and check options
     (opts, args) = parser.parse_args()
-    if(opts.readfile_2 is None):
+    if(opts.readfile_2 is None and opts.paired is None):
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
@@ -127,8 +134,8 @@ if __name__ == '__main__':
             sys.exit(1)
     else:
         doSings = False
-        if (opts.database is None or opts.readfile_1 is None ):
-            sys.stderr.write('You must specify both -1 and -2 and -d for a paired alignment.  For single ended just use -1 and -d'+"\n")
+        if (opts.database is None or (opts.readfile_2 is None and opts.paired is None)):
+            sys.stderr.write('You must specify both -1 and -d, as well as -2 or -p for a paired alignment.  For single ended just use -1 and -d'+"\n")
             parser.print_help()
             sys.exit(1)
 
