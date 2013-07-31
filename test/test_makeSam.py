@@ -78,6 +78,24 @@ class VerifyPostHocTests(unittest.TestCase):
     # Check the index exists also
     self.assertEqual(True, os.path.isfile(bamOutputFile+'.bai'))
 
+  def testComplainingAboutDatabaseAlreadyExisting(self):
+    bamOutputFile = '/tmp/a'+'.bam'
+    # Create dummy index files
+    subprocess.check_call(path_to_script+' -1 data/reads.fq.gz -d data/ref.fna --keep --bwa-aln >/dev/null', shell=True)
+    ret = subprocess.call(path_to_script+' -1 data/reads.fq.gz -d data/ref.fna --bwa-aln >/dev/null', shell=True)
+    self.assertEqual(ret, 1)
+    ret = subprocess.call(path_to_script+' -1 data/reads.fq.gz -d data/ref.fna --bwa-aln --kept >/dev/null', shell=True)
+    self.assertEqual(ret, 0)
+
+    # Clean up
+    d = 'data/ref.fna'
+    os.system('rm ' +d+'.amb')
+    os.system('rm ' +d+'.ann')
+    os.system('rm ' +d+'.bwt')
+    os.system('rm ' +d+'.pac')
+    os.system('rm ' +d+'.sa')
+
+
 
 if __name__ == "__main__":
 	unittest.main()

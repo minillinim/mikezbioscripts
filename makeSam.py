@@ -97,6 +97,13 @@ def safeRemove(fileName):
     if os.path.isfile(fileName):
         os.system('rm ' + fileName)
 
+def checkForDatabase(database_basename):
+    sys.stderr.write(database_basename+'.bwt')
+    if os.path.isfile(database_basename+'.bwt'):
+      return True
+    else:
+      return False
+
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -125,13 +132,22 @@ if __name__ == '__main__':
 
     # get and check options
     (opts, args) = parser.parse_args()
-    if(opts.readfile_2 is None and opts.paired is None):
+
+    if(opts.keptfiles is None and checkForDatabase(opts.database)):
+        sys.stderr.write("You didn't specify --kept but there appears to be bwa index files present. I'm cowardly refusing to run so as not to risk overwriting")
+        sys.exit(1)
+
+    if((opts.readfile_2 is None and opts.paired is None) or opts.singleEnd):
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
             sys.stderr.write('You need to specify a multiple fasta file and ONE read file (single ended)'+"\n")
             parser.print_help()
             sys.exit(1)
+    elif(opts.paired and opts.use_aln):
+        sys.stderr.write('You cannot use both -p and --bwa-aln at the same time'+"\n")
+        parser.print_help()
+        sys.exit(1)
     else:
         doSings = False
         if (opts.database is None or (opts.readfile_2 is None and opts.paired is None)):
