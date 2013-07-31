@@ -32,6 +32,14 @@ def mkindex(database, algorithm):
 def aln(database, readfile, outfile, threads):
     subprocess.check_call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
 
+def mem_single_to_sorted_indexed_bam(database, reads, outfile, threads, maxMemory):
+    """run bwa mem mapping with single ended reads"""
+    bwa_cmd = 'bwa mem -t'+threads+' '+database+' '+reads
+    cmd = bwa_cmd + ' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    print 'Running command:',cmd
+    subprocess.check_call(cmd, shell=True)
+    samtools_index(outfile)
+
 def mem_to_sorted_indexed_bam(database, reads1, reads2, outfile, threads, maxMemory):
     """run bwa mem. Assume -p for bwa if reads2 is None, otherwise specify reads1 and reads2"""
     bwa_cmd = 'bwa mem -t'+threads+' '+database+' '
@@ -223,8 +231,7 @@ if __name__ == '__main__':
         sys.stderr.write("Sorry, sam output file format for bwa-mem is not supported at this time (though it relatively easy to implement)\n")
         success = False
       elif (opts.singleEnd is True):
-        sys.stderr.write("Sorry, single ended mapping with bwa-mem is not supported at this time (though it relatively easy to implement)\n")
-        success = False
+        mem_single_to_sorted_indexed_bam(opts.database, opts.readfile_1, bam_output_file, numThreads, maxMemory)
       else:
         mem_to_sorted_indexed_bam(opts.database, opts.readfile_1, opts.readfile_2, bam_output_file, numThreads, maxMemory)
 
