@@ -32,6 +32,14 @@ def mkindex(database, algorithm):
 def aln(database, readfile, outfile, threads):
     subprocess.check_call('bwa aln -t '+ threads+' '+ database+' '+ readfile+' >'+outfile, shell=True)
 
+def mem_single_to_sorted_indexed_bam(database, reads, outfile, threads, maxMemory):
+    """run bwa mem mapping with single ended reads"""
+    bwa_cmd = 'bwa mem -t'+threads+' '+database+' '+reads
+    cmd = bwa_cmd + ' | samtools view -SubhF 4 - |samtools sort -@ '+threads+' -m '+maxMemory+' - '+outfile
+    print 'Running command:',cmd
+    subprocess.check_call(cmd, shell=True)
+    samtools_index(outfile)
+
 def mem_to_sorted_indexed_bam(database, reads1, reads2, outfile, threads, maxMemory):
     """run bwa mem. Assume -p for bwa if reads2 is None, otherwise specify reads1 and reads2"""
     bwa_cmd = 'bwa mem -t'+threads+' '+database+' '
@@ -97,6 +105,13 @@ def safeRemove(fileName):
     if os.path.isfile(fileName):
         os.system('rm ' + fileName)
 
+def checkForDatabase(database_basename):
+    sys.stderr.write(database_basename+'.bwt')
+    if os.path.isfile(database_basename+'.bwt'):
+      return True
+    else:
+      return False
+
 # Entry sub. Parse vars and call parseSamBam
 #
 if __name__ == '__main__':
@@ -125,19 +140,28 @@ if __name__ == '__main__':
 
     # get and check options
     (opts, args) = parser.parse_args()
-    if(opts.readfile_2 is None and opts.paired is None):
+
+    if((opts.readfile_2 is None and opts.paired is None) or opts.singleEnd):
         # single ended!
         doSings = True
         if (opts.database is None or opts.readfile_1 is None ):
             sys.stderr.write('You need to specify a multiple fasta file and ONE read file (single ended)'+"\n")
             parser.print_help()
             sys.exit(1)
+    elif(opts.paired and opts.use_aln):
+        sys.stderr.write('You cannot use both -p and --bwa-aln at the same time'+"\n")
+        parser.print_help()
+        sys.exit(1)
     else:
         doSings = False
         if (opts.database is None or (opts.readfile_2 is None and opts.paired is None)):
             sys.stderr.write('You must specify both -1 and -d, as well as -2 or -p for a paired alignment.  For single ended just use -1 and -d'+"\n")
             parser.print_help()
             sys.exit(1)
+
+    if(opts.keptfiles is None and checkForDatabase(opts.database)):
+        sys.stderr.write("You didn't specify --kept but there appears to be bwa index files present. I'm cowardly refusing to run so as not to risk overwriting")
+        sys.exit(1)
 
     # override defaults
     if(opts.algorithm is None):
@@ -207,8 +231,7 @@ if __name__ == '__main__':
         sys.stderr.write("Sorry, sam output file format for bwa-mem is not supported at this time (though it relatively easy to implement)\n")
         success = False
       elif (opts.singleEnd is True):
-        sys.stderr.write("Sorry, single ended mapping with bwa-mem is not supported at this time (though it relatively easy to implement)\n")
-        success = False
+        mem_single_to_sorted_indexed_bam(opts.database, opts.readfile_1, bam_output_file, numThreads, maxMemory)
       else:
         mem_to_sorted_indexed_bam(opts.database, opts.readfile_1, opts.readfile_2, bam_output_file, numThreads, maxMemory)
 
