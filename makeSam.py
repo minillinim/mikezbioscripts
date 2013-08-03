@@ -118,17 +118,21 @@ if __name__ == '__main__':
 
     # intialise the options parser
     parser = OptionParser("\n\n %prog [options]")
+
+    # Common options
     parser.add_option("-1", "--reads_1", type="string", dest="readfile_1", help="The first data of a paired read file")
     parser.add_option("-2", "--reads_2", type="string", dest="readfile_2", help="The second data of a paired read file")
     parser.add_option("-p", "--paired", action="store_true", dest="paired", help="The first query file contains interleaved paired sequences [default: false]")
     parser.add_option("-d", "--database", type="string", dest="database", help="The scaffold, query, database...")
-    parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
-    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
     parser.add_option("-K", "--kept", action="store_true", dest="keptfiles", help="Assume the indices already exist, don't re-make them (and don't delete them) (e.g. previously this script was run with -k/--keep [default: false]")
-    parser.add_option("-s", "--sam_filename", type="string",
-            dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
     parser.add_option("-b", "--bam_filename", type="string",
             dest="bamfilename", help="Output a sorted indexed bam file, of this name")
+
+    # Less common options
+    parser.add_option("-a", "--bwa_algorithm", type="string", dest="algorithm", help="The algorithm bwa uses for indexing 'bwtsw' or 'is' [default: is]")
+    parser.add_option("-k", "--keep", action="store_true", dest="keepfiles", help="Keep all the database index files etc after (see also --kept) [default: false]")
+    parser.add_option("-s", "--sam_filename", type="string",
+            dest="samfilename", help="The name for the final sam file name [default: STDOUT]")
     parser.add_option("-S", "--single", action="store_true", dest="singleEnd", help="Use this for non-paired reads [default: false]")
     parser.add_option("-L", "--long_reads", action="store_true",dest="longReads", help="The input is long reads (eg. 454), sets the search algorithm to BWA-SW")
     parser.add_option("-t", "--threads", type="int", dest="threads",
