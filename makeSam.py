@@ -145,10 +145,6 @@ if __name__ == '__main__':
     # get and check options
     (opts, args) = parser.parse_args()
 
-    if(opts.keptfiles is None and checkForDatabase(opts.database)):
-        sys.stderr.write("You didn't specify --kept but there appears to be bwa index files present. I'm cowardly refusing to run so as not to risk overwriting")
-        sys.exit(1)
-
     if((opts.readfile_2 is None and opts.paired is None) or opts.singleEnd):
         # single ended!
         doSings = True
@@ -166,6 +162,10 @@ if __name__ == '__main__':
             sys.stderr.write('You must specify both -1 and -d, as well as -2 or -p for a paired alignment.  For single ended just use -1 and -d'+"\n")
             parser.print_help()
             sys.exit(1)
+
+    if(opts.keptfiles is None and checkForDatabase(opts.database)):
+        sys.stderr.write("You didn't specify --kept but there appears to be bwa index files present. I'm cowardly refusing to run so as not to risk overwriting")
+        sys.exit(1)
 
     # override defaults
     if(opts.algorithm is None):
